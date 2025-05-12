@@ -37,7 +37,10 @@ void Piece::moveTo(const H2DE_LevelPos& destPos) {
     static const Data* data = game->getData();
     static const int& moveDuration = data->getMoveDuration();
 
-    if (!isMoveLegal(destPos) || game->getTurn() != team) {
+    bool moveIsIllegal = !isMoveLegal(destPos);
+    bool itsTurn = game->getTurn() != team;
+
+    if (moveIsIllegal || itsTurn) {
         H2DE_SetObjectPos(object, pos, moveDuration, H2DE_EASING_LINEAR, true);
         return;
     }
@@ -79,6 +82,7 @@ void Piece::castle(const H2DE_LevelPos& destPos) {
         }
     }
 
+    game->nextTurn();
     hasCastled = true;
 }
 
@@ -113,7 +117,7 @@ void Piece::checkCastling(std::vector<H2DE_LevelPos>& possibleMoves) const {
             bool isRook = (possibleLeftRook->getType() == PIECE_TYPE_ROOK);
             bool noObstacle = (possibleObstacle == nullptr);
 
-            if (isRook && possibleRightRook->didntMove && noObstacle) {
+            if (isRook && possibleLeftRook->didntMove && noObstacle) {
 
                 const H2DE_LevelPos supMove = H2DE_LevelPos{ -2.0f, 0.0f } + pos;
                 possibleMoves.push_back(supMove);
@@ -193,7 +197,7 @@ bool Piece::isGoingToPromote(const H2DE_LevelPos& destPos) {
 bool Piece::isGoingToOverride(const H2DE_LevelPos& destPos) const {
     Piece* pieceToOverride = plate->getPiece(destPos);
 
-    bool res = pieceToOverride != nullptr;
+    bool res = (pieceToOverride != nullptr);
 
     if (res) {
         plate->deletePiece(pieceToOverride);
